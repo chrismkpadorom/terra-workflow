@@ -53,10 +53,10 @@ jobs:
           token: ${{ github.TOKEN }}
 
       - name: Set Node.js 20.x for GitHub Action
-        uses: hp-infrastructure/dlz-github-workflow/node@v1.0.0
+        uses: chrismkpadorom/terra-workflow/node@v1.0.0
 
       - name: Setup Terraform
-        uses: hp-infrastructure/dlz-github-workflow/setup@v1.0.0
+        uses: chrismkpadorom/terra-workflow/setup@v1.0.0
       
       - name: "Print configuration vars to output"
         shell: bash
@@ -73,7 +73,7 @@ jobs:
             echo "backend_key=${{ vars.PROJECT }}-${{ inputs.deployment_name }}.tfstate" >> $GITHUB_OUTPUT
 
       - name: Terraform Init
-        uses: hp-infrastructure/dlz-github-workflow/init@v1.0.0
+        uses: chrismkpadorom/terra-workflow/init@v1.0.0
         with:
           backend_rg: ${{ steps.print-vars.outputs.backend_rg }}
           backend_sa: ${{ steps.print-vars.outputs.backend_sa }}
@@ -83,39 +83,40 @@ jobs:
           deploy_key: ${{ secrets.DEPLOY_SECRET_KEY }}
 
       - name: Terraform Validate
-        uses: hp-infrastructure/dlz-github-workflow/validate@v1.0.0
+        uses: chrismkpadorom/terra-workflow/validate@v1.0.0
         with:
           tf_actions_working_dir: ${{ inputs.tf_actions_working_dir }}
 
       - name: Terraform Format
-        uses: hp-infrastructure/dlz-github-workflow/format@v1.0.0
+        uses: chrismkpadorom/terra-workflow/format@v1.0.0
         with:
           tf_actions_working_dir: ${{ inputs.tf_actions_working_dir }}
 
       - name: Terraform Plan
         id: tf-plan
-        uses: hp-infrastructure/dlz-github-workflow/plan@v1.0.0
+        uses: chrismkpadorom/terra-workflow/plan@v1.0.0
         with:
           environment: ${{ inputs.environment }}
           tf_actions_working_dir: ${{ inputs.tf_actions_working_dir }}
           params_dir: ${{ steps.print-vars.outputs.params_dir }}
 
       - name: Publish Terraform Plan
-        uses: hp-infrastructure/dlz-github-workflow/publish@v1.0.0
+        uses: chrismkpadorom/terra-workflow/publish@v1.0.0
         with:
           environment: ${{ inputs.environment }}
           tf_actions_working_dir: ${{ inputs.tf_actions_working_dir }}
 
       - name: Create String Output
         id: tf-plan-string
-        uses: hp-infrastructure/dlz-github-workflow/summary@v1.0.0
+        uses: chrismkpadorom/terra-workflow/summary@v1.0.0
         with:
           environment: ${{ inputs.environment }}
           tf_actions_working_dir: ${{ inputs.tf_actions_working_dir }}
 
       - name:  Publish Drift Report
-        uses: hp-infrastructure/dlz-github-workflow/drift@v1.0.0
+        uses: chrismkpadorom/terra-workflow/drift@v1.0.0
         with:
           github_token: ${{ github.TOKEN }}
           planExitCode: ${{ steps.tf-plan.outputs.exitcode }} 
           outputSummary: ${{ steps.tf-plan-string.outputs.summary }} 
+
