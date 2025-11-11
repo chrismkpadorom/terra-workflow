@@ -76,13 +76,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Terraform
-        uses: hp-infrastructure/dlz-github-workflow/setup@v1.0.0
+        uses: chrismkpadorom/terra-workflow/setup@v1.0.0
 
       - name: Set Node.js 20.x for GitHub Action
-        uses: hp-infrastructure/dlz-github-workflow/node@v1.0.0
+        uses: chrismkpadorom/terra-workflow/node@v1.0.0
 
       - name: Terraform Init
-        uses: hp-infrastructure/dlz-github-workflow/init@v1.0.0
+        uses: chrismkpadorom/terra-workflow/init@v1.0.0
         with:
           backend_rg: ${{ inputs.backend_rg }}
           backend_sa: ${{ inputs.backend_sa }}
@@ -93,7 +93,7 @@ jobs:
 
       - name: Terraform Plan Destroy
         id: tf-plan-destroy
-        uses: hp-infrastructure/dlz-github-workflow/plan-destroy@v1.0.0
+        uses: chrismkpadorom/terra-workflow/plan-destroy@v1.0.0
         with:
           environment: ${{ inputs.environment }}
           tf_actions_working_dir: ${{ inputs.tf_actions_working_dir }}
@@ -101,14 +101,14 @@ jobs:
         #continue-on-error: true
 
       - name: Publish Terraform Plan
-        uses: hp-infrastructure/dlz-github-workflow/publish@v1.0.0
+        uses: chrismkpadorom/terra-workflow/publish@v1.0.0
         with:
           environment: ${{ inputs.environment }}
           tf_actions_working_dir: ${{ inputs.tf_actions_working_dir }}
         #continue-on-error: true
 
       - name: Create String Output
-        uses: hp-infrastructure/dlz-github-workflow/summary@v1.0.0
+        uses: chrismkpadorom/terra-workflow/summary@v1.0.0
         with:
           environment: ${{ inputs.environment }}
           tf_actions_working_dir: ${{ inputs.tf_actions_working_dir }}
@@ -142,13 +142,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Terraform
-        uses: hp-infrastructure/dlz-github-workflow/setup@v1.0.0
+        uses: chrismkpadorom/terra-workflow/setup@v1.0.0
 
       - name: Set Node.js 20.x for GitHub Action
-        uses: hp-infrastructure/dlz-github-workflow/node@v1.0.0
+        uses: chrismkpadorom/terra-workflow/node@v1.0.0
 
       - name: Terraform Init
-        uses: hp-infrastructure/dlz-github-workflow/init@v1.0.0
+        uses: chrismkpadorom/terra-workflow/init@v1.0.0
         with:
           backend_rg: ${{ inputs.backend_rg }}
           backend_sa: ${{ inputs.backend_sa }}
@@ -158,8 +158,9 @@ jobs:
           github_token: ${{ secrets.DLZ_GITHUB_TOKEN }}
 
       - name: Terraform Destroy
-        uses: hp-infrastructure/dlz-github-workflow/destroy@v1.0.0
+        uses: chrismkpadorom/terra-workflow/destroy@v1.0.0
         with:
           environment: ${{ inputs.environment }}
           tf_actions_working_dir: ${{ inputs.tf_actions_working_dir }}
           paramsDir: ${{ inputs.paramsDir }}       
+
