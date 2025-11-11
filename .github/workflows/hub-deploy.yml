@@ -51,7 +51,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: PowerShell
-        uses: hp-infrastructure/dlz-github-workflow/powershell@v1.0.0
+        uses: chrismkpadorom/terra-workflow/powershell@v1.0.0
 
       - name: Login via Az module
         uses: azure/login@v2
@@ -71,10 +71,10 @@ jobs:
         continue-on-error: true
 
       - name: Bicep Install
-        uses: hp-infrastructure/dlz-github-workflow/bicep@v1.0.0
+        uses: chrismkpadorom/terra-workflow/bicep@v1.0.0
 
       - name: FinOps
-        uses: hp-infrastructure/dlz-github-workflow/finops@v1.0.0
+        uses: chrismkpadorom/terra-workflow/finops@v1.0.0
         with:
           hubName: ${{ inputs.hubName }}
           ResourceGroup: ${{ inputs.ResourceGroup }}
@@ -82,3 +82,4 @@ jobs:
           location: ${{ inputs.location }}
           version: ${{ inputs.version }}
           action: ${{ inputs.action }}
+
