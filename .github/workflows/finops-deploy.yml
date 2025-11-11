@@ -1,0 +1,84 @@
+name: deploy-finops-hub
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      runner:
+        required: true
+        type: string
+      hubName:
+        required: true
+        type: string
+      ResourceGroup:
+        required: true
+        type: string
+      dataExplorer:
+        required: false
+        type: string
+      location:
+        required: false
+        type: string
+      version:
+        required: false
+        type: string
+        description: 'Specify Terraform plan command extra arguments'
+      action:
+        required: false
+        type: string
+        
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+
+env: 
+  REQUESTS_CA_BUNDLE: /etc/ssl/certs/ca-certificates.crt
+  SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
+
+jobs:
+  bicep-deploy:
+    name: Bicep Deploy
+    if: ${{ github.ref == 'refs/heads/main' }} || ${{ inputs.environment }} == 'npd'
+    runs-on: ${{ inputs.runner }}
+    environment: ${{ inputs.environment }}
+    defaults:
+      run:
+        working-directory: ${{ github.workspace }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: PowerShell
+        uses: hp-infrastructure/dlz-github-workflow/powershell@v1.0.0
+
+      - name: Login via Az module
+        uses: azure/login@v2
+        with:
+          creds: '{
+            "clientId":"${{ secrets.AZURE_CLIENT_ID }}",
+            "clientSecret":"${{ secrets.AZURE_CLIENT_SECRET }}",
+            "subscriptionId":"${{ secrets.AZURE_SUBSCRIPTION_ID }}",
+            "tenantId":"${{ secrets.AZURE_TENANT_ID }}"
+            }'
+          enable-AzPSSession: true
+      
+      - name: Run Azure PowerShell inline script
+        shell: pwsh
+        run: |
+            Get-AzContext
+        continue-on-error: true
+
+      - name: Bicep Install
+        uses: hp-infrastructure/dlz-github-workflow/bicep@v1.0.0
+
+      - name: FinOps
+        uses: hp-infrastructure/dlz-github-workflow/finops@v1.0.0
+        with:
+          hubName: ${{ inputs.hubName }}
+          ResourceGroup: ${{ inputs.ResourceGroup }}
+          dataExplorer: ${{ inputs.dataExplorer }}
+          location: ${{ inputs.location }}
+          version: ${{ inputs.version }}
+          action: ${{ inputs.action }}
