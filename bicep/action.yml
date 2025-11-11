@@ -1,0 +1,24 @@
+name: Bicep
+description: Bicep Install
+runs:
+  using: "composite"
+  steps:
+    - name: Bicep Install
+      shell: pwsh
+      working-directory: ${{ inputs.tf_actions_working_dir }}
+      run: |
+        $bicepVersion=$(bicep --version)
+        Write-Host $bicepVersion
+        if($bicepVersion){
+          echo "Bicep is installed!"
+        }else{
+          # Fetch the latest Bicep CLI binary
+          curl -Lo bicep https://github.com/Azure/bicep/releases/latest/download/bicep-linux-x64
+          # Mark it as executable
+          chmod +x ./bicep
+          # Add bicep to your PATH (requires admin)
+          sudo mv ./bicep /usr/local/bin/bicep
+          # Verify you can now access the 'bicep' command
+          bicep --version
+          # Done!
+        }

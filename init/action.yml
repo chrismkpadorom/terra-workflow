@@ -1,0 +1,68 @@
+name: Terraform Init
+inputs:
+  backend_rg:
+    required: true
+    type: string
+  backend_sa:
+    required: true
+    type: string
+  backend_sa_container:
+    required: true
+    type: string
+  backend_sa_key:
+    required: true
+    type: string
+    description: 'Specify Terraform plan command extra arguments'
+  tf_actions_working_dir:
+    required: true
+    type: string
+  deploy_key:
+    required: true
+    type: string
+description: Terraform Init
+runs:
+  using: "composite"
+  steps:
+    - name: Terraform Init
+      shell: bash
+      id: init
+      working-directory: ${{ inputs.tf_actions_working_dir }}
+      run: |
+
+        mkdir -p ~/.ssh/
+        keyPath=~/.ssh/dlz_deploy_key
+        hostPath=~/.ssh/dlz_known_hosts
+        echo "${{ inputs.deploy_key }}" > $keyPath
+        chmod 600 $keyPath
+        count=0
+        # Re-create if file is corrupt
+        while [ $count -lt 2 ]; do
+            # Check if file exist or empty!
+            if [ ! -s "$keyPath" ]; then
+                echo "keys file is empty or does not exist!"
+                echo "loading keys..."
+                mkdir -p ~/.ssh/
+                echo "${{ inputs.deploy_key }}" > $keyPath
+                chmod 600 $keyPath
+                echo "loaded!"
+                count=$((count + 1))
+            else
+              echo "Keys file is good to go!"
+              count=9
+            fi
+        done
+        #Retrieve host key and add to known host
+        ssh-keyscan github.com  > $hostPath
+        #Add SSH Key to SSH Agent
+        eval "$(ssh-agent -s)"
+        ssh-add $keyPath
+        #Overwrite default
+        GIT_SSH_COMMAND='ssh -i $keyPath -o IdentitiesOnly=yes'
+        terraform init \
+        -reconfigure \
+        -backend-config="resource_group_name=${{inputs.backend_rg }}" \
+        -backend-config="storage_account_name=${{inputs.backend_sa }}" \
+        -backend-config="container_name=${{inputs.backend_sa_container }}" \
+        -backend-config="key=${{inputs.backend_sa_key }}"
+        
+        echo "git init was successful"

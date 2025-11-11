@@ -1,0 +1,42 @@
+name: Create String Output
+inputs:
+  environment:
+    required: true
+    type: string
+    default: 'dev'
+  tf_actions_working_dir:
+    required: true
+    type: string
+description: Create String Output and Publish Terraform Plan to Task Summary
+outputs: 
+  summary: # Define the output name
+    description: 'define plan summary'
+    value: ${{ steps.tf-plan-string.outputs.summary }} 
+runs:
+  using: "composite"
+  steps:
+    - name: Create String Output
+      id: tf-plan-string
+      shell: bash
+      working-directory: ${{ inputs.tf_actions_working_dir }}
+      run: |
+        TERRAFORM_PLAN=$(terraform show -no-color ${{inputs.environment}}.plan.tfplan)
+        delimiter="$(openssl rand -hex 8)"
+        echo "summary<<${delimiter}" >> $GITHUB_OUTPUT
+        echo "## Terraform Plan Output" >> $GITHUB_OUTPUT
+        echo "<details open><summary>Plan Summary</summary>" >> $GITHUB_OUTPUT
+        echo "" >> $GITHUB_OUTPUT
+        echo '```terraform' >> $GITHUB_OUTPUT
+        echo "$TERRAFORM_PLAN" >> $GITHUB_OUTPUT
+        echo '```' >> $GITHUB_OUTPUT
+        echo "</details>" >> $GITHUB_OUTPUT
+        echo "${delimiter}" >> $GITHUB_OUTPUT
+        
+    - name: Publish Terraform Plan to Task Summary
+      shell: bash
+      working-directory: ${{ inputs.tf_actions_working_dir }}
+      env:
+        SUMMARY: ${{ steps.tf-plan-string.outputs.summary }}
+      run: |
+        echo "$SUMMARY" >> $GITHUB_STEP_SUMMARY
+        

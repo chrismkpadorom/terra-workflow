@@ -1,0 +1,59 @@
+name: Terraform Plan
+inputs:
+  environment:
+    required: true
+    type: string
+  tf_actions_working_dir:
+    required: true
+    type: string
+  params_dir:
+    required: true
+    type: string
+description: Terraform Plan
+outputs: 
+  exitcode: # Define the output name
+    description: 'define plan exit code'
+    value: ${{ steps.tf-plan.outputs.exitcode }} 
+runs:
+  using: "composite"
+  steps:
+    - name: Terraform Plan
+      shell: bash
+      id: tf-plan
+      working-directory: ${{ inputs.tf_actions_working_dir }}
+      run: |
+        export exitcode=0
+        terraform plan \
+        -input=false \
+        -detailed-exitcode \
+        -var-file="${{ github.workspace }}/${{ inputs.params_dir }}/${{ inputs.environment }}-ado-variables.tfvars" \
+        -out ${{ inputs.environment }}.plan.tfplan  || export exitcode=$?
+        echo "exitcode=$exitcode" >> $GITHUB_OUTPUT
+        if [ $exitcode -eq 1 ]; then
+          echo "Error: Terraform plan failed"
+            
+          for (( i = 0; i < 2; i++ )); do
+            echo "Retrying Terraform plan ($i): ... "
+            sleep 30
+            export exitcode=0
+            terraform plan \
+            -detailed-exitcode \
+            -var-file="${{ github.workspace }}/${{ inputs.params_dir }}/${{ inputs.environment }}-ado-variables.tfvars" \
+            -out ${{ inputs.environment }}.plan.tfplan  || export exitcode=$?
+            echo "exitcode=$exitcode" >> $GITHUB_OUTPUT
+            if [ $exitcode -eq 0 ]; then
+              echo "Terraform plan was successful"
+              exit 0
+            elif [ $exitcode -eq 2 ]; then
+              echo "Terraform plan was successful and has change"
+              exit 0
+            fi
+          done
+          exit 1
+        elif [ $exitcode -eq 2 ]; then
+          echo "Terraform plan was successful and has change"
+          exit 0
+        else
+          echo "Terraform plan was successful"
+          exit 0
+        fi

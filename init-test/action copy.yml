@@ -1,0 +1,94 @@
+name: Terraform Init
+inputs:
+  backend_rg:
+    required: true
+    type: string
+  backend_sa:
+    required: true
+    type: string
+  backend_sa_container:
+    required: true
+    type: string
+  backend_sa_key:
+    required: true
+    type: string
+    description: 'Specify Terraform plan command extra arguments'
+  tf_actions_working_dir:
+    required: true
+    type: string
+  deploy_key:
+    required: true
+    type: string
+description: Terraform Init
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Git Access
+      shell: bash
+      working-directory: ${{ inputs.tf_actions_working_dir }}
+      env:
+        dlz_deploy_key: ${{ inputs.deploy_key }}
+        sshkeyName: "dlz_auth_key"
+      run: |
+
+        ssh-agent -k
+        mkdir -p ~/.ssh/
+        chmod 700 ~/.ssh
+        echo "${dlz_deploy_key}" > ~/.ssh/${sshkeyName}
+        chmod 600 ~/.ssh/${sshkeyName}
+        #Retrieve host key and add to known host
+        ssh-keyscan github.com  > ~/.ssh/dlz_known_hosts
+
+    - name: Terraform Init
+      shell: bash
+      id: init
+      working-directory: ${{ inputs.tf_actions_working_dir }}
+      env:
+        sshkeyName: "dlz_auth_key"
+      run: |
+
+        #Add SSH Key to SSH Agent
+        # Check ssh-agent
+        # if [[ ! -z ${SSH_AGENT_PID+x} ]]
+        # then
+        #     echo "[OK] ssh-agent is already running with pid: "${SSH_AGENT_PID}
+        # else
+        #     echo "Starting new ssh-agent..."
+        #     eval "$(ssh-agent -s)"
+        #     echo "Started agent with pid: "${SSH_AGENT_PID}
+        #     ssh-add ~/.ssh/${sshkeyName}
+        # fi
+
+        # # Check ssh-key
+        # if [[ $(ssh-add -L | grep ~/.ssh/${sshkeyName} | wc -l) -gt 0 ]]
+        # then
+        #     echo "[OK] SSH key already added to ssh-agent"
+        # else
+        #     echo "Need to add SSH key to ssh-agent..."
+        #     ssh-add ~/.ssh/${sshkeyName}
+        # fi
+
+        # if ps $SSH_AGENT_PID -u $UID  > /dev/null
+        # then
+        #   echo "ssh-agent is already running"
+        #   ssh-add ~/.ssh/dlz_auth_key
+        # else
+        #   eval "$(ssh-agent -s)"
+        #   ssh-add ~/.ssh/dlz_auth_key
+        # fi
+
+        eval "$(ssh-agent -s)"
+        ssh-add ~/.ssh/dlz_auth_key
+
+
+        #Overwrite default
+
+        GIT_SSH_COMMAND='ssh -i ~/.ssh/dlz_auth_key -o IdentitiesOnly=yes'
+        terraform init \
+        -reconfigure \
+        -backend-config="resource_group_name=${{inputs.backend_rg }}" \
+        -backend-config="storage_account_name=${{inputs.backend_sa }}" \
+        -backend-config="container_name=${{inputs.backend_sa_container }}" \
+        -backend-config="key=${{inputs.backend_sa_key }}"
+        
+        echo "git init was successful"

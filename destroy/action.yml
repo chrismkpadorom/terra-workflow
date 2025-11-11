@@ -1,0 +1,22 @@
+name: Terraform Destroy
+inputs:
+  environment:
+    required: true
+    type: string
+  tf_actions_working_dir:
+    required: true
+    type: string
+  params_dir:
+    required: true
+    type: string
+description: Terraform Destroy
+runs:
+  using: "composite"
+  steps:
+    - name: Terraform Destroy
+      shell: bash
+      working-directory: ${{ inputs.tf_actions_working_dir }}
+      run: |
+        terraform apply -destroy \
+        -input=false \
+        -var-file="${{ github.workspace }}/${{ inputs.params_dir }}/${{ inputs.environment }}-ado-variables.tfvars" 

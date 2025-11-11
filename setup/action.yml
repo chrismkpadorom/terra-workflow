@@ -1,0 +1,31 @@
+name: Terraform setup
+description: Setup Terraform
+runs:
+  using: "composite"
+  steps:
+    - name: Whose Runner is it?
+      id: rId
+      shell: bash
+      run: |
+
+        # check if runner id dpo runner
+        if [[ ${{ runner.name }} == "hp-dpo-runner"* ]]; then
+          echo "github dpo runner"
+          echo "runnerName=dpo" >> "$GITHUB_OUTPUT"
+          #add default user to docker group
+          sudo usermod -aG docker $USER
+          echo "group added"
+          # login to docker
+          newgrp docker
+          echo "login successful"
+          docker run hello-world
+        else
+          echo "github default runner"
+          echo "runnerName=default" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Setup Terraform
+      if: ${{ steps.rId.outputs.runnerName == 'default' }}
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_wrapper: false

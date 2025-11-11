@@ -1,0 +1,14 @@
+name: Terraform Validate
+inputs:
+  tf_actions_working_dir:
+    required: true
+    type: string
+description: Terraform Validate
+runs:
+  using: "composite"
+  steps:
+    - name: Terraform Validate
+      shell: bash
+      id: validate
+      working-directory: ${{ inputs.tf_actions_working_dir }}
+      run: terraform validate

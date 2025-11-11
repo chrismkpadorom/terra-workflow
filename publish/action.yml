@@ -1,0 +1,18 @@
+name: Publish Terraform Plan
+inputs:
+  environment:
+    required: true
+    type: string
+  tf_actions_working_dir:
+    required: true
+    type: string
+description: Terraform Validate
+runs:
+  using: "composite"
+  steps:
+    - name: Publish Terraform Plan
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.environment }}${{ github.run_id }} #tfplan
+        path: ${{ inputs.tf_actions_working_dir }}/*.plan.tfplan
+

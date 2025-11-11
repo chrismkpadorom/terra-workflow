@@ -1,0 +1,65 @@
+name: FinOps
+inputs:
+  hubName:
+    required: true
+    type: string
+  ResourceGroup:
+    required: true
+    type: string
+  location:
+    required: true
+    type: string
+  dataExplorer:
+    required: false
+    type: string
+  version:
+    required: true
+    type: string
+    description: 'Specify Terraform plan command extra arguments'
+  action:
+    required: true
+    type: string
+
+description: FinOps
+runs:
+  using: "composite"
+  steps:
+    - name: Deploy FinOps
+      shell: pwsh
+      run: |
+        $action="${{inputs.action}}"
+        if ($action -eq "create"){
+            [Environment]::SetEnvironmentVariable("temp", "$env:RUNNER_TEMP")
+
+            Write-Output "Installing FinOps Toolkit pwsh module"
+
+            Import-Module -Name FinOpsToolkit
+
+            #Initialize-FinOpsHubDeployment -WhatIf
+
+            Deploy-FinOpsHub `
+                -Name ${{ inputs.hubName }}  `
+                -ResourceGroup ${{ inputs.ResourceGroup }}  `
+                -Location ${{ inputs.location }} `
+                -Version ${{ inputs.version }}  `
+                -DataExplorerName ${{ inputs.dataExplorer }}  `
+                -Confirm:$false
+
+            Write-Output "Deployment complete"
+        }elseif($action -eq "remove"){
+            [Environment]::SetEnvironmentVariable("temp", "$env:RUNNER_TEMP")
+            Write-Output "Removing FinOps Toolkit pwsh module"
+
+            Import-Module -Name FinOpsToolkit
+            Remove-FinOpsHub `
+                -Name ${{ inputs.hubName }}  `
+                -ResourceGroup ${{ inputs.ResourceGroup }} `
+                -Force `
+                -Confirm:$false
+
+            Write-Output "Deployment complete"
+          # elif[$action -eq 'update']; then
+
+        }else{
+          echo "unknown action: use create or remove"
+        }
